@@ -11,13 +11,14 @@ ori_data = [unpickle(f) for f in data_file_list]
 data = [d[b'data'] for d in ori_data]
 labels = [d[b'labels'] for d in ori_data]
 
-pixel_count = 1024 # 32 * 32
+in_size = 3 * 32 * 32
+out_size = 10
 
-#TODO
 def gen_xy(count):
 	'''生成训练数据'''
-	ret_x = np.ndarray(shape=(count, 3, 32, 32))
-	ret_y = np.ndarray(shape=(count), 10)
+	ret_x = np.ndarray(shape=(count, in_size))
+	ret_y = np.ndarray(shape=(count, out_size))
 	for _ in range(0, count):
+		#TODO
 		pass
 	return ret_x, ret_y
