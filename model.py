@@ -1,46 +1,35 @@
+import os
+import sys
+
+import init
+
 import numpy as np
 import tensorflow as tf
-from init import *
 
-def _variable_on_cpu(name, shape, initializer):
-  """Helper to create a Variable stored on CPU memory.
+class NN:
 
-  Args:
-    name: name of the variable
-    shape: list of ints
-    initializer: initializer for Variable
+  layer_i = tf.placeholder(tf.float32)
+  layer_e = tf.placeholder(tf.float32)
+  layers = {}
+  loss = 0
 
-  Returns:
-    Variable Tensor
-  """
-  with tf.device('/cpu:0'):
-    var = tf.get_variable(name, shape, initializer=initializer)
-  return var
+  def _fc_layer(x, o_size):
+    x = tf.reshape(x, [x.size() / x.shape()[-1] ,x.shape()[-1]])
+    k = tf.Variable(tf.truncated_normal([x.shape()[-1], o_size]))
+    b = tf.Variable(tf.truncated_normal([o.size]))
+    return tf.nn.relu(tf.matmul(x, k) + b)
 
+  def _maxpool_layer(x):
+    return tf.nn.max_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-def _variable_with_weight_decay(name, shape, stddev, wd):
-  """Helper to create an initialized Variable with weight decay.
+  def _conv_layer(x, o_size):
+    k = tf.Variable(tf.truncated_normal([3, 3, x.shape()[3], o_size]))
+    b = tf.Variable(tf.truncated_normal([x.shape()[0], x.shape()[1], x.shape()[2], o_size]))
+    return tf.nn.relu(tf.nn.conv2d(x, k, [1, 1, 1 ,1], 'SAME') + b)
 
-  Note that the Variable is initialized with a truncated normal distribution.
-  A weight decay is added only if one is specified.
+  def reset_loss():
+    loss = 0
 
-  Args:
-    name: name of the variable
-    shape: list of ints
-    stddev: standard deviation of a truncated Gaussian
-    wd: add L2Loss weight decay multiplied by this float. If None, weight
-        decay is not added for this Variable.
-
-  Returns:
-    Variable Tensor
-  """
-  var = _variable_on_cpu(name, shape,
-                         tf.truncated_normal_initializer(stddev=stddev))
-  if wd:
-    weight_decay = tf.mul(tf.nn.l2_loss(var), wd, name='weight_loss')
-    tf.add_to_collection('losses', weight_decay)
-  return var
-
-
-x_ = tf.placeholder(tf.float32, [None, in_size])
-y_ = tf.placeholder(tf.float32, [None, out_size])
+  def add_loss(o, e, c):
+    loss = loss + c * tf.reduce_sum(tf.map_fn(tf.square, o - e))
+  
